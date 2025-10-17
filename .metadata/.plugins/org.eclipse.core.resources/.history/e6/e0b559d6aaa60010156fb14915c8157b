@@ -1,0 +1,630 @@
+<%@ page import="java.util.List" %>
+<%@ page import="java.util.Collections" %>
+<%@ page import="java.util.Comparator" %>
+<%@ page import="ipl.Match" %>
+<%@ page import="ipl.MatchDaoImp" %>
+<%@ page import="ipl.Team" %>
+<%@ page import="ipl.TeamDaoImp" %>
+<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
+<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Admin Dashboard - IPL Matches</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    
+    <style>
+            :root {
+      --bg-dark: #1a1a1a;
+      --card-dark: #242424;
+      --text-light: #f5f5f5;
+      --accent-orange: #ff6600;
+      --shadow-blue: 0 4px 15px rgba(0, 174, 255, 0.2);
+    }
+
+    body {
+      background-color: var(--bg-dark);
+      color: var(--text-light);
+      font-family: 'Poppins', sans-serif;
+    }
+
+    /* Navbar */
+    .navbar {
+      background-color: var(--card-dark);
+      padding: 10px;
+      border-bottom: 1px solid #333;
+    }
+
+    .navbar .container-fluid {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 20px;
+    }
+
+    .navbar-brand {
+      font-weight: bold;
+      font-size: 1.8rem;
+      color: white;
+      font-family: 'Brush Script MT';
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .navbar-brand img {
+      width: 80px;
+      height: auto;
+    }
+
+    .btn-admin {
+      position: absolute;
+      right: 20px;
+      top: 10px;
+      background-color: var(--accent-orange);
+      color: white;
+      padding: 6px 15px;
+      border-radius: 4px;
+      font-weight: 600;
+      align-items: center;
+    }
+
+    .nav-link {
+      color: white !important;
+    } 
+    .navbar-brand:hover,
+    .navbar-brand:focus {
+      color: white !important; 
+    }
+
+    .nav-link:hover,
+    .nav-link:focus {
+      color: var(--accent-blue) !important;
+      background: transparent !important;
+    }
+
+    /* Dock style */
+    .dock-container {
+      display: flex;
+      justify-content: center;
+      gap: 30px;
+      margin: 20px 0;
+    }
+
+    .dock-item {
+      transition: transform 0.3s ease;
+    }
+
+    .dock-item:hover {
+      transform: scale(1.3) translateY(-10px);
+    }
+
+    .dock-item a {
+      color: var(--text-light);
+      text-decoration: none;
+      font-size: 1.1rem;
+      font-weight: 500;
+      padding: 8px 15px;
+      border-radius: 8px;
+      background-color: #333;
+    }
+
+    .dock-item a.active,
+    .dock-item a:hover {
+      background-color: var(--accent-orange);
+      color: #fff;
+    }
+
+.section-title {
+  text-align: center;
+  font-size: 28px;
+  font-weight: 600;
+  margin-top: 30px;
+  margin-bottom: 10px;
+  position: relative;
+  color: white;
+}
+
+.section-title::after {
+  content: "";
+  display: block;
+  width: 130px;
+  height: 3px;
+  background-color: red;
+  margin: 10px auto 0 auto;
+  border-radius: 4px;
+}        /* Filter Bar - Adjusted colors for dark background */
+        .filter-bar {
+            text-align: center;
+            margin: 20px 0;
+        }
+        .filter-bar button {
+            border: 1px solid var(--accent-orange);
+            color: var(--text-light);
+            background: #333;
+            padding: 8px 15px;
+            border-radius: 20px;
+            cursor: pointer;
+            margin: 0 5px;
+        }
+        .filter-bar button.active {
+            background-color: var(--accent-orange);
+            border-color: var(--accent-orange);
+            color: white;
+        }
+
+
+        /* --- TIMELINE ARCHIVE STYLES (Adjusted for responsiveness) --- */
+        .vn-sheduleList {
+            position: relative;
+            padding-left: 50px;
+            max-width: 1200px;
+            margin: 20px auto;
+        }
+        .timeLineDivider {
+            position: absolute;
+            left: 20px;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background-color: #E5E7E9;
+        }
+        #team_archive {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        #team_archive li {
+            position: relative;
+            margin-bottom: 30px;
+            background: #242424;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+            border: 1px solid #333;
+            color: #f5f5f5;
+        }
+        .timeline-dot {
+            position: absolute;
+            left: -32px;
+            top: 15px;
+            width: 15px;
+            height: 15px;
+            background-color: var(--accent-orange);
+            border-radius: 50%;
+            z-index: 10;
+            border: 3px solid var(--bg-dark);
+        }
+
+        /* Match Header & Metadata */
+        .vn-schedule-head {
+            display: flex;
+            align-items: flex-start;
+            padding: 15px 20px 0 20px;
+            border-bottom: 1px solid #333;
+        }
+        .vn-matchOrder-container {
+            width: 35%; /* Increased width to fit larger text */
+            min-width: 180px; 
+            margin-right: 20px;
+            padding-bottom: 15px;
+            position: relative;
+        }
+        .vn-matchOrder {
+            font-weight: 600;
+            color: var(--accent-orange);
+            text-transform: uppercase;
+            font-size: 14px;
+        }
+        
+        /* New Styles for Status and Stage */
+        .vn-stage-stage {
+            font-weight: 700;
+            color: #cc5500; /* Darker orange/brown for match stage */
+            font-size: 15px; 
+            display: block;
+        }
+        .vn-matchStatus {
+             font-size: 16px; /* Bigger font */
+             font-weight: 700;
+             margin-top: 5px;
+        }
+        .status-upcoming { color: #0088cc; } /* Blue for Upcoming */
+        .status-completed { color: #28a745; } /* Green for Completed */
+        .status-running { color: #dc3545; } /* Red for Running */
+
+        .vn-venueDet-container {
+            flex-grow: 1;
+            padding-bottom: 15px;
+        }
+        .vn-venueDet span {
+            font-weight: 600;
+            color: var(--text-light);
+            font-size: 16px;
+            text-transform: capitalize; /* Handled in scriptlet for safety, but good fallback */
+        }
+        .vn-matchDateTime {
+            font-size: 12px;
+            color: #aaa;
+            margin-top: 2px;
+        }
+
+        /* Match Scoreboard */
+        .vn-shedule-desk {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 20px;
+        }
+
+        /* FIX: Adjusted width for result comment and made it optional */
+        .vn-result-comment {
+            flex-shrink: 0;
+            max-width: 250px;
+            min-width: 100px;
+            padding-right: 20px;
+            text-align: left;
+        }
+        .vn-ticketTitle {
+            font-weight: 600;
+            color: #28a745;
+            font-size: 15px;
+            margin: 0;
+            padding: 0;
+        }
+        .vn-pom {
+            font-size: 13px;
+            color: #00aaff;
+            font-weight: 500;
+            margin-top: 3px;
+        }
+        
+        /* Scoreboard Layout */
+        .live-score {
+            display: flex;
+            align-items: center;
+            flex-grow: 1;
+            justify-content: center;
+        }
+        .vn-shedTeam {
+            display: flex;
+            align-items: center;
+            flex-direction: column;
+            width: 35%;
+        }
+        .schTeamLogo {
+            width: 60px; /* Bigger Image */
+            height: 60px; /* Bigger Image */
+            border-radius: 50%;
+            border: 1px solid #555;
+            object-fit: contain;
+        }
+        .vn-teamTitle {
+            text-align: center;
+            margin-top: 5px;
+        }
+        .vn-teamName h3 {
+            margin: 0;
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-light);
+        }
+        .vn-teamCode h3 {
+            margin: 0;
+            font-size: 12px;
+            color: #aaa;
+        }
+
+        /* Scores */
+        .vn-shedTeam p {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--accent-orange);
+            margin: 5px 0 0 0;
+        }
+        .versus {
+            font-size: 18px;
+            font-weight: 700;
+            color: #555;
+            padding: 0 15px;
+        }
+        .versus::before {
+            content: "VS";
+        }
+
+        /* Action Buttons */
+        .vn-ticket {
+            flex-shrink: 0;
+            width: 200px;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+        }
+        .vn-ticnbtn {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .vn-matchBtn {
+            background-color: var(--accent-orange);
+            color: white;
+            padding: 8px 15px;
+            border-radius: 20px;
+            text-decoration: none;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        /* Icon Links */
+        .matchReportIcon, .matchHLIcon {
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            background-color: #444;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-light);
+            text-decoration: none;
+        }
+        .matchReportIcon:hover, .matchHLIcon:hover {
+            background-color: var(--accent-orange);
+            color: white;
+        }
+
+       
+
+    .floating-button {
+      position: fixed;
+      top: 100px;
+      right: 25px;
+      z-index: 999;
+    }
+
+    .floating-button a {
+      background-color: #28a745;
+      color: white;
+      padding: 12px 20px;
+      border-radius: 30px;
+      text-decoration: none;
+      font-weight: bold;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+    }
+
+    .floating-button a:hover {
+      background-color: #218838;
+    }
+
+        footer {
+            background-color: var(--card-dark);
+            color: #aaa;
+            padding: 20px 0;
+            margin-top: 50px;
+        }
+    </style>
+</head>
+<body>
+
+<nav class="navbar">
+  <div class="container-fluid">
+    <a class="navbar-brand" href="#">
+      <img src="https://documents.iplt20.com/ipl/assets/images/ipl-logo-new-old.png" alt="IPL Logo">
+      IPL Management
+    </a>
+    <a href="main.jsp" class="btn btn-admin">Logout</a>
+  </div>
+</nav>
+
+<div class="dock-container">
+  <div class="dock-item"><a href="admindash.jsp"><i class="fas fa-users"></i> Teams</a></div>
+  <div class="dock-item"><a href="adminPlayers.jsp"><i class="fas fa-user"></i> Players</a></div>
+  <div class="dock-item"><a href="#" class="active"><i class="fas fa-chart-line"></i> Matches</a></div>
+</div>
+
+<div class="section-title">Added Matches</div>
+
+<div class="filter-bar">
+    <button class="active" onclick="filterMatches('All', this)">All</button>
+    <button onclick="filterMatches('Upcoming', this)">Upcoming</button>
+    <button onclick="filterMatches('Completed', this)">Completed</button>
+    <button onclick="filterMatches('Running', this)">Running</button>
+</div>
+
+<div class="container mt-4">
+    
+    <div class="vn-sheduleList vn-resultsList mb-4">
+        <span class="timeLineDivider"></span>
+        <ul id="team_archive">
+            <%
+                // Scriptlet logic to fetch data
+                MatchDaoImp matchDao = new MatchDaoImp();
+                TeamDaoImp teamDao = new TeamDaoImp();
+                List<Match> matches = matchDao.getAllMatches(); 
+                
+                // *** SORTING IMPLEMENTATION (DESCENDING ORDER OF MATCH ID) ***
+                matches.sort(Comparator.comparing(Match::getMatchId).reversed());
+
+                // Iterating over the list of matches
+                for (Match m : matches) {
+                    
+                    int matchId = m.getMatchId();
+                    String matchStage;
+
+                    // --- MATCH STAGE LOGIC BASED ON MATCH ID (ASSUMING 70 LEAGUE + 4 PLAYOFFS) ---
+                    if (matchId <= 70) {
+                        matchStage = "League Match";
+                    } else if (matchId == 71) {
+                        matchStage = "Qualifier 1";
+                    } else if (matchId == 72) {
+                        matchStage = "Eliminator";
+                    } else if (matchId == 73) {
+                        matchStage = "Qualifier 2";
+                    } else if (matchId == 74) {
+                        matchStage = "Final";
+                    } else {
+                        matchStage = "Extra/TBD Match";
+                    }
+                    
+                    // --- END: MATCH STAGE LOGIC ---
+
+                    Team team1 = teamDao.getTeamByCode(m.getTeam1Code());
+                    Team team2 = teamDao.getTeamByCode(m.getTeam2Code());
+
+                    String team1Logo = team1 != null ? team1.getLogoPath() : "default-logo.png";
+                    String team2Logo = team2 != null ? team2.getLogoPath() : "default-logo.png";
+
+                    String team1Name = team1 != null ? team1.getTeamName() : "Unknown";
+                    String team2Name = team2 != null ? team2.getTeamName() : "Unknown";
+
+                    String team1Score = m.getTeam1Score() != null ? m.getTeam1Score() : "- / -";
+                    String team2Score = m.getTeam2Score() != null ? m.getTeam2Score() : "- / -";
+                    
+                    String status = m.getStatus().toUpperCase();
+                    String statusClass = "status-" + m.getStatus().toLowerCase(); // For dynamic color styling
+                    
+                    // Venue formatting: Capitalize first letter of venue
+                    String venue = m.getVenue();
+                    if (venue != null && venue.length() > 0) {
+                        venue = venue.substring(0, 1).toUpperCase() + venue.substring(1).toLowerCase();
+                    }
+                    
+                    String resultComment = "";
+                    String playerOfMatch = m.getPlayerOfMatch() != null ? m.getPlayerOfMatch() : "";
+                    
+                    if (status.equalsIgnoreCase("COMPLETED") && m.getWinnerCode() != null) {
+                        resultComment = m.getWinnerCode() + " Won the Match"; 
+                    } else if (status.equalsIgnoreCase("UPCOMING")) {
+                        resultComment = "Match Scheduled";
+                    } else if (status.equalsIgnoreCase("RUNNING")) {
+                        resultComment = "Live Score In Progress";
+                    }
+            %>
+            <li data-status="<%= m.getStatus() %>">
+                <div class="vn-schedule-head">
+                    
+                    <div class="vn-matchOrder-container">
+                        <span class="vn-matchOrder">Match ID: <%= m.getMatchId() %></span>
+                        <span class="vn-stage-stage"><%= matchStage.toUpperCase() %></span>
+                        <div class="vn-matchStatus <%= statusClass %>">
+                            <%= status %>
+                        </div>
+                        <span class="timeline-dot"></span>
+                    </div>
+                    
+                    <div class="vn-venueDet-container">
+                        <span class="vn-venueDet">
+                            <span><%= venue %></span>
+                        </span>
+                        <div class="vn-matchDateTime">
+                            <%= m.getMatchDate() %>, <%= m.getMatchTime() %> IST
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="vn-shedule-desk">
+                    
+                    <div class="vn-result-comment">
+                        <% if (!resultComment.isEmpty()) { %>
+                            <div class="vn-ticketTitle">
+                                **<%= resultComment %>**
+                            </div>
+                            <% if (status.equalsIgnoreCase("COMPLETED") && !playerOfMatch.isEmpty()) { %>
+                                <div class="vn-pom">
+                                    Player of the Match: **<%= playerOfMatch %>**
+                                </div>
+                            <% } %>
+                        <% } %>
+                    </div>
+                    
+                    <div class="vn-sheduleLogo" style="flex-grow: 1;">
+                        <div class="live-score">
+                            
+                            <div class="vn-shedTeam">
+                                <img src="<%= team1Logo %>" alt="<%= team1Name %>" class="schTeamLogo">
+                                <div class="vn-teamTitle">
+                                    <div class="vn-teamName">
+                                        <h3><%= team1Name %></h3>
+                                    </div>
+                                    <div class="vn-teamCode">
+                                        <h3><%= m.getTeam1Code() %></h3>
+                                    </div>
+                                    <p><%= team1Score %></p>
+                                </div>
+                            </div>
+                            
+                            <span class="versus"></span>
+                            
+                            <div class="vn-shedTeam vn-team-2">
+                                <img src="<%= team2Logo %>" alt="<%= team2Name %>" class="schTeamLogo">
+                                <div class="vn-teamTitle">
+                                    <div class="vn-teamName">
+                                        <h3><%= team2Name %></h3>
+                                    </div>
+                                    <div class="vn-teamCode">
+                                        <h3><%= m.getTeam2Code() %></h3>
+                                    </div>
+                                    <p><%= team2Score %></p>
+                                </div>
+                            </div>
+                            
+                        </div>
+                    </div>
+                    
+                    <div class="vn-ticket">
+                        <div class="vn-ticnbtn">
+                            
+                            <a href="updateMatch.jsp?matchId=<%= m.getMatchId() %>" class="matchReportIcon" title="Edit Match">
+                                <i class="fas fa-edit"></i>
+                            </a>
+                            <a onclick="confirmDelete(<%= m.getMatchId() %>)" class="matchHLIcon" title="Delete Match">
+                                <i class="fas fa-trash"></i>
+                            </a>
+                            
+                            <a href="MatchServlet?action=getMatchById&matchId=<%= m.getMatchId() %>" class="vn-matchBtn">Match Centre</a>
+                        </div>
+                    </div>
+                    
+                </div>
+            </li>
+            <% } %>
+        </ul>
+    </div>
+
+</div>
+
+<div class="floating-button">
+    <a href="addMatch.jsp"><i class="fas fa-plus-circle"></i> Add Match</a>
+</div>
+
+<footer class="text-center mt-5">© 2025 IPL Management. All Rights Reserved.</footer>
+
+<script>
+    function confirmDelete(id) {
+        if (confirm("Are you sure you want to delete this match?")) {
+            window.location.replace("MatchServlet?action=delete&matchId=" + id); 
+        }
+    }
+
+    function filterMatches(filter, button) {
+        const buttons = document.querySelectorAll('.filter-bar button');
+        buttons.forEach(btn => btn.classList.remove('active'));
+        button.classList.add('active');
+
+        const matchItems = document.querySelectorAll('#team_archive li');
+        matchItems.forEach(item => {
+            const matchStatus = item.getAttribute('data-status');
+            
+            if (filter === 'All' || matchStatus.toUpperCase() === filter.toUpperCase()) {
+                item.style.display = 'flex'; 
+            } else {
+                item.style.display = 'none';
+            }
+        });
+    }
+</script>
+
+</body>
+</html>

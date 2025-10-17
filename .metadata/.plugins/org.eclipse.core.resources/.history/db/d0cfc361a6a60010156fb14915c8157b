@@ -1,0 +1,173 @@
+<%@ page import="ipl.MatchDaoImp" %>
+<%@ page import="ipl.Match" %>
+<%@ page import="ipl.TeamDaoImp" %>
+<%@ page import="ipl.Team" %>
+<%@ page import="java.util.*" %>
+<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<%
+    MatchDaoImp matchDao = new MatchDaoImp();
+    TeamDaoImp teamDao = new TeamDaoImp();
+    List<Match> matches = matchDao.getAllMatches();
+%>
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Admin Matches</title>
+    <style>
+        body {
+            font-family: "Poppins", sans-serif;
+            background: #f9fafc;
+            margin: 0;
+            padding: 0;
+        }
+        h2 {
+            text-align: center;
+            margin-top: 20px;
+            color: #222;
+        }
+        .match-container {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            width: 85%;
+            margin: 30px auto;
+        }
+        .match-card {
+            background: #fff;
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .team {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            width: 35%;
+        }
+        .team img {
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+        .vs {
+            font-weight: 700;
+            font-size: 18px;
+            color: #444;
+        }
+        .details {
+            text-align: center;
+            width: 25%;
+        }
+        .details p {
+            margin: 3px 0;
+            color: #555;
+            font-size: 14px;
+        }
+        .actions {
+            display: flex;
+            gap: 8px;
+        }
+        .btn {
+            border: none;
+            padding: 7px 14px;
+            border-radius: 8px;
+            font-size: 13px;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+        .btn-edit {
+            background: #2196f3;
+            color: #fff;
+        }
+        .btn-delete {
+            background: #e53935;
+            color: #fff;
+        }
+        .btn:hover {
+            opacity: 0.9;
+        }
+        .score {
+            font-weight: 600;
+            color: #222;
+            font-size: 15px;
+        }
+        .status {
+            padding: 5px 10px;
+            border-radius: 6px;
+            font-weight: 500;
+            color: #fff;
+        }
+        .status.completed { background: #4caf50; }
+        .status.upcoming { background: #ff9800; }
+        .no-matches {
+            text-align: center;
+            color: #888;
+            margin-top: 40px;
+            font-size: 16px;
+        }
+    </style>
+</head>
+<body>
+<h2>All Matches</h2>
+
+<div class="match-container">
+    <%
+        if (matches != null && !matches.isEmpty()) {
+            for (Match m : matches) {
+                Team t1 = teamDao.getTeamByCode(m.getTeam1Code());
+                Team t2 = teamDao.getTeamByCode(m.getTeam2Code());
+    %>
+    <div class="match-card">
+        <div class="team">
+            <img src="<%= (t1 != null && t1.getLogoPath() != null) ? t1.getLogoPath() : "images/default-logo.png" %>" alt="Team 1">
+            <div>
+                <strong><%= (t1 != null) ? t1.getTeamName() : "Unknown" %></strong><br>
+                <span class="score">
+                    <%= "Completed".equalsIgnoreCase(m.getStatus()) ? (m.getTeam1Score() != null ? m.getTeam1Score() : "-") : "-" %>
+                </span>
+            </div>
+        </div>
+
+        <div class="vs">VS</div>
+
+        <div class="team" style="justify-content: flex-end;">
+            <div style="text-align: right;">
+                <strong><%= (t2 != null) ? t2.getTeamName() : "Unknown" %></strong><br>
+                <span class="score">
+                    <%= "Completed".equalsIgnoreCase(m.getStatus()) ? (m.getTeam2Score() != null ? m.getTeam2Score() : "-") : "-" %>
+                </span>
+            </div>
+            <img src="<%= (t2 != null && t2.getLogoPath() != null) ? t2.getLogoPath() : "images/default-logo.png" %>" alt="Team 2">
+        </div>
+
+        <div class="details">
+            <p><strong>Venue:</strong> <%= m.getVenue() %></p>
+            <p><strong>Date:</strong> <%= m.getMatchDate() %></p>
+            <p><strong>Time:</strong> <%= m.getMatchTime() %></p>
+            <p><span class="status <%= m.getStatus().equalsIgnoreCase("Completed") ? "completed" : "upcoming" %>">
+                <%= m.getStatus() %>
+            </span></p>
+        </div>
+
+        <div class="actions">
+            <form action="MatchServlet" method="get" style="display:inline;">
+                <input type="hidden" name="action" value="delete">
+                <input type="hidden" name="matchId" value="<%= m.getMatchId() %>">
+                <button class="btn btn-delete" onclick="return confirm('Delete this match?');">Delete</button>
+            </form>
+            <form action="updateMatch.jsp" method="get" style="display:inline;">
+                <input type="hidden" name="matchId" value="<%= m.getMatchId() %>">
+                <button class="btn btn-edit">Edit</button>
+            </form>
+        </div>
+    </div>
+    <% } } else { %>
+    <div class="no-matches">No matches found.</div>
+    <% } %>
+</div>
+</body>
+</html>

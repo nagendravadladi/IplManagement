@@ -1,0 +1,7 @@
+INDEX VERSION 1.4+C:\Users\Dell\Desktop\Buddi\.metadata\.plugins\org.eclipse.wst.jsdt.core\indexes
+2240416799.index
+3231314749.index
+661723182.index
+45537091.index
+851177482.index
+245063577.index

@@ -1,0 +1,188 @@
+<%@ page import="java.util.List" %>
+<%@ page import="ipl.Match" %>
+<%@ page import="ipl.MatchDaoImp" %>
+<%@ page import="ipl.Team" %>
+<%@ page import="ipl.TeamDaoImp" %>
+<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Admin Dashboard - IPL Matches</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <style>
+        /* keep your same full CSS — omitted here for brevity */
+    </style>
+</head>
+<body>
+<nav class="navbar">
+    <div class="container-fluid">
+        <a class="navbar-brand" href="#">
+            <img src="https://documents.iplt20.com/ipl/assets/images/ipl-logo-new-old.png" style="height: 50px;" alt="IPL Logo">
+            IPL Management
+        </a>
+        <a href="main.jsp" class="btn btn-admin">Logout</a>
+    </div>
+</nav>
+
+<div class="dock-container">
+    <div class="dock-item"><a href="admindash.jsp"><i class="fas fa-users"></i> Teams</a></div>
+    <div class="dock-item"><a href="adminPlayers.jsp"><i class="fas fa-user"></i> Players</a></div>
+    <div class="dock-item"><a href="#" class="active"><i class="fas fa-calendar-alt"></i> Matches</a></div>
+</div>
+
+<div class="section-title">Match Archive</div>
+
+<div class="filter-bar">
+    <button class="active" onclick="filterMatches('All', this)">All</button>
+    <button onclick="filterMatches('Upcoming', this)">Upcoming</button>
+    <button onclick="filterMatches('Completed', this)">Completed</button>
+    <button onclick="filterMatches('Running', this)">Running</button>
+</div>
+
+<div class="container mt-4">
+<div class="vn-sheduleList vn-resultsList posRel vn-fullArchiveList col-100 floatLft menT mb-4">
+<span class="timeLineDivider"></span>
+<ul id="team_archive">
+<%
+    MatchDaoImp matchDao = new MatchDaoImp();
+    TeamDaoImp teamDao = new TeamDaoImp();
+    List<Match> matches = matchDao.getAllMatches();
+
+    for (Match m : matches) {
+        Team team1 = teamDao.getTeamByCode(m.getTeam1Code());
+        Team team2 = teamDao.getTeamByCode(m.getTeam2Code());
+
+        String team1Logo = (team1 != null && team1.getLogoPath() != null && !team1.getLogoPath().isEmpty())
+                ? team1.getLogoPath() : "images/default_logo.png";
+        String team2Logo = (team2 != null && team2.getLogoPath() != null && !team2.getLogoPath().isEmpty())
+                ? team2.getLogoPath() : "images/default_logo.png";
+
+        String team1Name = (team1 != null) ? team1.getTeamName() : "Unknown";
+        String team2Name = (team2 != null) ? team2.getTeamName() : "Unknown";
+
+        String team1Score = "-";
+        String team2Score = "-";
+        if ("COMPLETED".equalsIgnoreCase(m.getStatus())) {
+            if (m.getTeam1Score() != null) team1Score = m.getTeam1Score();
+            if (m.getTeam2Score() != null) team2Score = m.getTeam2Score();
+        } else if ("RUNNING".equalsIgnoreCase(m.getStatus())) {
+            team1Score = "Live...";
+            team2Score = "Live...";
+        }
+
+        String date = (m.getMatchDate() != null) ? m.getMatchDate().toString() : "TBD";
+        String time = (m.getMatchTime() != null) ? m.getMatchTime().toString() : "TBD";
+
+        String resultComment = "";
+        if ("COMPLETED".equalsIgnoreCase(m.getStatus())) {
+            if (m.getWinnerCode() != null) {
+                Team winner = teamDao.getTeamByCode(m.getWinnerCode());
+                String winnerName = (winner != null) ? winner.getTeamName() : m.getWinnerCode();
+                resultComment = "🏆 " + winnerName + " won the match";
+                if (m.getPlayerOfMatch() != null && !m.getPlayerOfMatch().isEmpty()) {
+                    resultComment += " — Player of Match: " + m.getPlayerOfMatch();
+                }
+            } else {
+                resultComment = "Match Completed";
+            }
+        } else if ("UPCOMING".equalsIgnoreCase(m.getStatus())) {
+            resultComment = "⏰ Match Scheduled";
+        } else if ("RUNNING".equalsIgnoreCase(m.getStatus())) {
+            resultComment = "🟢 Live Now";
+        }
+%>
+
+<li data-status="<%= m.getStatus() %>">
+    <div class="vn-schedule-head">
+        <div class="w20 fl pr50 posRel">
+            <span class="vn-matchOrder">League Match</span>
+            <span class="timeline-dot"></span>
+        </div>
+        <div class="w50 fl">
+            <span class="vn-venueDet">
+                <p><span><%= m.getVenue() %></span></p>
+            </span>
+            <div class="vn-matchDateTime"><%= date %>, <%= time %> IST</div>
+        </div>
+    </div>
+
+    <div class="vn-shedule-desk col-100 floatLft">
+        <div class="w20 tl pr50">
+            <% if (!resultComment.isEmpty()) { %>
+                <div class="vn-ticketTitle"><%= resultComment %></div>
+            <% } %>
+        </div>
+
+        <div class="vn-sheduleLogo">
+            <div class="live-score">
+                <div class="vn-shedTeam">
+                    <img src="<%= team1Logo %>" alt="<%= team1Name %>" class="schTeamLogo">
+                    <div class="vn-teamTitle">
+                        <div class="vn-teamName"><h3><%= team1Name %></h3></div>
+                        <div class="vn-teamCode"><h3><%= m.getTeam1Code() %></h3></div>
+                        <p><%= team1Score %></p>
+                    </div>
+                </div>
+
+                <span class="versus"></span>
+
+                <div class="vn-shedTeam vn-team-2">
+                    <img src="<%= team2Logo %>" alt="<%= team2Name %>" class="schTeamLogo">
+                    <div class="vn-teamTitle">
+                        <div class="vn-teamName"><h3><%= team2Name %></h3></div>
+                        <div class="vn-teamCode"><h3><%= m.getTeam2Code() %></h3></div>
+                        <p><%= team2Score %></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="vn-ticket">
+            <div class="vn-ticnbtn">
+                <a href="updateMatch.jsp?matchId=<%= m.getMatchId() %>" class="matchReportIcon" title="Edit Match">
+                    <i class="fas fa-edit"></i>
+                </a>
+                <a onclick="confirmDelete(<%= m.getMatchId() %>)" class="matchHLIcon" title="Delete Match">
+                    <i class="fas fa-trash"></i>
+                </a>
+                <a href="MatchServlet?action=getMatchById&matchId=<%= m.getMatchId() %>" class="vn-matchBtn">Match Centre</a>
+            </div>
+        </div>
+    </div>
+</li>
+
+<% } %>
+</ul>
+</div>
+</div>
+
+<div class="floating-button">
+    <a href="addMatch.jsp"><i class="fas fa-plus-circle"></i> Add Match</a>
+</div>
+
+<footer class="text-center mt-5">© 2025 IPL Management. All Rights Reserved.</footer>
+
+<script>
+function confirmDelete(id) {
+    if (confirm("Are you sure you want to delete this match?")) {
+        window.location.href = "MatchServlet?action=delete&matchId=" + id;
+    }
+}
+function filterMatches(filter, button) {
+    const buttons = document.querySelectorAll('.filter-bar button');
+    buttons.forEach(btn => btn.classList.remove('active'));
+    button.classList.add('active');
+
+    const matchItems = document.querySelectorAll('#team_archive li');
+    matchItems.forEach(item => {
+        const matchStatus = item.getAttribute('data-status');
+        item.style.display = (filter === 'All' || matchStatus.toUpperCase() === filter.toUpperCase()) ? 'flex' : 'none';
+    });
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,11 @@
+0:0:0:0:0:0:0:1 - - [08/Oct/2025:12:35:28 +0530] "GET /IPlManagement/adminMatches.jsp HTTP/1.1" 200 4971
+0:0:0:0:0:0:0:1 - - [08/Oct/2025:12:35:41 +0530] "GET /IPlManagement/admindash.jsp HTTP/1.1" 200 10385
+0:0:0:0:0:0:0:1 - - [08/Oct/2025:12:35:41 +0530] "GET /IPlManagement/images/csk-logo.jpg HTTP/1.1" 304 -
+0:0:0:0:0:0:0:1 - - [08/Oct/2025:12:35:41 +0530] "GET /IPlManagement/images/mi-logo.jpg HTTP/1.1" 304 -
+0:0:0:0:0:0:0:1 - - [08/Oct/2025:12:35:42 +0530] "GET /IPlManagement/images/rcb-logo.avif HTTP/1.1" 304 -
+0:0:0:0:0:0:0:1 - - [08/Oct/2025:12:37:03 +0530] "GET /IPlManagement/adminPlayers.jsp HTTP/1.1" 200 10892
+0:0:0:0:0:0:0:1 - - [08/Oct/2025:12:37:03 +0530] "GET /IPlManagement/images/dhoniPlay.jpg HTTP/1.1" 304 -
+0:0:0:0:0:0:0:1 - - [08/Oct/2025:12:37:03 +0530] "GET /IPlManagement/images/rohitplay.avif HTTP/1.1" 304 -
+0:0:0:0:0:0:0:1 - - [08/Oct/2025:12:37:06 +0530] "GET /IPlManagement/images/viratplay.avif HTTP/1.1" 304 -
+0:0:0:0:0:0:0:1 - - [08/Oct/2025:12:39:04 +0530] "GET /IPlManagement/admindash.jsp HTTP/1.1" 200 10385
+0:0:0:0:0:0:0:1 - - [08/Oct/2025:12:39:24 +0530] "GET /IPlManagement/adminMatches.jsp HTTP/1.1" 200 4971

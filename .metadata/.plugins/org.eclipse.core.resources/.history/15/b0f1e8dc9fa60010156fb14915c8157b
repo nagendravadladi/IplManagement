@@ -1,0 +1,217 @@
+<%@ page import="ipl.MatchDaoImp" %>
+<%@ page import="ipl.TeamDaoImp" %>
+<%@ page import="ipl.Match" %>
+<%@ page import="ipl.Team" %>
+<%@ page import="java.util.List" %>
+<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Admin - Manage Matches</title>
+    <style>
+        body {
+            font-family: "Poppins", sans-serif;
+            background: #f5f6fa;
+            color: #333;
+            margin: 0;
+            padding: 0;
+        }
+
+        h1 {
+            text-align: center;
+            color: #222;
+            margin: 30px 0;
+        }
+
+        .match-container {
+            width: 85%;
+            margin: auto;
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        th {
+            background-color: #007bff;
+            color: white;
+            padding: 12px;
+        }
+
+        td {
+            padding: 12px;
+            border-bottom: 1px solid #ddd;
+        }
+
+        tr:hover {
+            background-color: #f1f1f1;
+        }
+
+        .team {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .team img {
+            width: 35px;
+            height: 35px;
+            object-fit: cover;
+            border-radius: 50%;
+        }
+
+        .add-btn {
+            background: #28a745;
+            color: white;
+            border: none;
+            padding: 10px 18px;
+            border-radius: 6px;
+            font-size: 14px;
+            cursor: pointer;
+            margin-bottom: 15px;
+        }
+
+        .add-btn:hover {
+            background: #218838;
+        }
+
+        .action-btn {
+            border: none;
+            padding: 8px 14px;
+            border-radius: 5px;
+            cursor: pointer;
+            color: white;
+        }
+
+        .edit-btn {
+            background: #ffc107;
+        }
+
+        .delete-btn {
+            background: #dc3545;
+        }
+
+        .edit-btn:hover {
+            background: #e0a800;
+        }
+
+        .delete-btn:hover {
+            background: #c82333;
+        }
+
+        .status-upcoming {
+            color: #007bff;
+            font-weight: bold;
+        }
+
+        .status-completed {
+            color: #28a745;
+            font-weight: bold;
+        }
+
+        .score {
+            font-weight: 600;
+            color: #333;
+        }
+    </style>
+</head>
+<body>
+
+<h1>Manage Matches</h1>
+
+<div class="match-container">
+    <form action="addmatch.jsp">
+        <button type="submit" class="add-btn">➕ Add Match</button>
+    </form>
+
+    <%
+        MatchDaoImp matchDao = new MatchDaoImp();
+        TeamDaoImp teamDao = new TeamDaoImp();
+        List<Match> matches = matchDao.getAllMatches();
+
+        if (matches == null || matches.isEmpty()) {
+    %>
+        <p style="text-align:center; color:gray;">No matches available</p>
+    <%
+        } else {
+    %>
+        <table>
+            <tr>
+                <th>Match ID</th>
+                <th>Teams</th>
+                <th>Venue</th>
+                <th>Date</th>
+                <th>Time</th>
+                <th>Status</th>
+                <th>Scores</th>
+                <th>Winner</th>
+                <th>Player of Match</th>
+                <th>Actions</th>
+            </tr>
+
+            <%
+                for (Match match : matches) {
+                    Team team1 = teamDao.getTeamByCode(match.getTeam1Code());
+                    Team team2 = teamDao.getTeamByCode(match.getTeam2Code());
+
+                    String team1Logo = (team1 != null && team1.getLogoPath() != null && !team1.getLogoPath().isEmpty())
+                            ? team1.getLogoPath() : "images/default_logo.png";
+                    String team2Logo = (team2 != null && team2.getLogoPath() != null && !team2.getLogoPath().isEmpty())
+                            ? team2.getLogoPath() : "images/default_logo.png";
+
+                    String team1Name = (team1 != null) ? team1.getTeamName() : "Unknown";
+                    String team2Name = (team2 != null) ? team2.getTeamName() : "Unknown";
+
+                    String team1Score = (match.getStatus().equalsIgnoreCase("COMPLETED") && match.getTeam1Score() != null)
+                            ? match.getTeam1Score() : "-";
+                    String team2Score = (match.getStatus().equalsIgnoreCase("COMPLETED") && match.getTeam2Score() != null)
+                            ? match.getTeam2Score() : "-";
+            %>
+
+            <tr>
+                <td><%= match.getMatchId() %></td>
+                <td class="team">
+                    <img src="<%= team1Logo %>" alt="Logo">
+                    <%= team1Name %> 
+                    <b>vs</b> 
+                    <img src="<%= team2Logo %>" alt="Logo">
+                    <%= team2Name %>
+                </td>
+                <td><%= match.getVenue() %></td>
+                <td><%= match.getMatchDate() %></td>
+                <td><%= match.getMatchTime() %></td>
+                <td class="<%= match.getStatus().equalsIgnoreCase("COMPLETED") ? "status-completed" : "status-upcoming" %>">
+                    <%= match.getStatus() %>
+                </td>
+                <td class="score">
+                    <%= team1Score %> <b>–</b> <%= team2Score %>
+                </td>
+                <td><%= match.getWinnerCode() != null ? match.getWinnerCode() : "-" %></td>
+                <td><%= match.getPlayerOfMatch() != null ? match.getPlayerOfMatch() : "-" %></td>
+                <td>
+                    <form action="editmatch.jsp" method="get" style="display:inline;">
+                        <input type="hidden" name="match_id" value="<%= match.getMatchId() %>">
+                        <button class="action-btn edit-btn">Edit</button>
+                    </form>
+                    <form action="deletematch" method="post" style="display:inline;">
+                        <input type="hidden" name="match_id" value="<%= match.getMatchId() %>">
+                        <button class="action-btn delete-btn" onclick="return confirm('Delete this match?');">Delete</button>
+                    </form>
+                </td>
+            </tr>
+
+            <% } %>
+        </table>
+    <% } %>
+</div>
+
+</body>
+</html>

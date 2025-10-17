@@ -1,0 +1,11 @@
+INDEX VERSION 1.134+C:\Users\Dell\Desktop\Buddi\.metadata\.plugins\org.eclipse.jdt.core
+3413270776.index
+880893606.index
+72568733.index
+661723182.index
+402312419.index
+1540241931.index
+227097192.index
+1865797976.index
+3308877018.index
+798442472.index

@@ -1,0 +1,493 @@
+<%@ page import="java.util.List" %>
+<%@ page import="ipl.Match" %>
+<%@ page import="ipl.MatchDaoImp" %>
+<%@ page import="ipl.Team" %>
+<%@ page import="ipl.TeamDaoImp" %>
+<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
+<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Admin Dashboard - IPL Matches</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    
+    <style>
+        /* --- BASE STYLES & LAYOUT --- */
+        body {
+            background-color: #f7f7f7; /* Light background for contrast */
+            color: #11141C; /* Dark text for readability */
+            font-family: 'Poppins', sans-serif;
+        }
+        .navbar, footer {
+            background-color: #0E1639; /* Dark Navy Blue Header */
+            color: white;
+        }
+        .navbar .navbar-brand {
+            color: white;
+        }
+        .dock-container {
+            background-color: #fff;
+            padding: 10px 0;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        .dock-item a {
+            background-color: #E5E7E9;
+            color: #11141C;
+        }
+        .dock-item a.active,
+        .dock-item a:hover {
+            background-color: #0E1639; /* IPL Blue Accent */
+            color: white;
+        }
+        .section-title {
+            color: #11141C;
+            text-align: left;
+            margin-left: 20px;
+            font-weight: 700;
+        }
+        .filter-bar {
+            text-align: left;
+            margin: 10px 20px;
+        }
+        .filter-bar button {
+            border: 1px solid #0E1639;
+            color: #0E1639;
+            background: none;
+            padding: 8px 15px;
+            border-radius: 20px;
+            cursor: pointer;
+        }
+        .filter-bar button.active {
+            background-color: #0E1639;
+            border-color: #0E1639;
+            color: white;
+        }
+
+        /* --- TIMELINE ARCHIVE STYLES (Based on the original HTML) --- */
+
+        .vn-sheduleList {
+            position: relative;
+            padding-left: 50px; /* Space for the timeline */
+            max-width: 1200px;
+            margin: 20px auto;
+        }
+
+        /* Vertical Divider Line */
+        .timeLineDivider {
+            position: absolute;
+            left: 20px;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background-color: #E5E7E9; /* Light gray line */
+        }
+
+        #team_archive {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        #team_archive li {
+            position: relative;
+            margin-bottom: 25px;
+            background: #ffffff;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
+            border: 1px solid #eee;
+        }
+
+        /* Timeline Dot */
+        .timeline-dot {
+            position: absolute;
+            left: -32px; /* Position relative to the parent li */
+            top: 15px;
+            width: 15px;
+            height: 15px;
+            background-color: #0E1639; /* Dark Blue Dot */
+            border-radius: 50%;
+            z-index: 10;
+            border: 3px solid #f7f7f7; /* Border to sit on the background */
+        }
+
+        /* Match Header & Metadata */
+        .vn-schedule-head {
+            display: flex;
+            align-items: flex-start;
+            padding: 15px 20px 0 20px;
+        }
+        .vn-matchOrder {
+            font-weight: 600;
+            color: #ff6600; /* Orange/Red Accent */
+            text-transform: uppercase;
+            font-size: 14px;
+            margin-right: 40px;
+            padding-top: 5px;
+        }
+        .vn-venueDet p {
+            margin: 0;
+            font-size: 14px;
+            color: #555;
+        }
+        .vn-venueDet span {
+            font-weight: 600;
+            color: #11141C;
+        }
+        .vn-matchDateTime {
+            font-size: 12px;
+            color: #888;
+            margin-top: 5px;
+        }
+
+        /* Match Scoreboard */
+        .vn-shedule-desk {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 20px 20px 20px;
+        }
+
+        /* Match Result Text (e.g., Won by 6 Runs) */
+        .vn-ticketTitle {
+            font-weight: 600;
+            color: #008000; /* Green for win */
+            font-size: 15px;
+            min-width: 200px; /* Allocate space for the result text */
+            padding-right: 20px;
+        }
+
+        /* Scoreboard Layout */
+        .live-score {
+            display: flex;
+            align-items: center;
+            flex-grow: 1;
+            justify-content: center;
+        }
+        .vn-shedTeam {
+            display: flex;
+            align-items: center;
+            flex-direction: column;
+            width: 35%;
+        }
+        .schTeamLogo {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            border: 1px solid #ccc;
+            object-fit: contain;
+        }
+        .vn-teamTitle {
+            text-align: center;
+            margin-top: 5px;
+        }
+        .vn-teamName h3 {
+            margin: 0;
+            font-size: 14px;
+            font-weight: 600;
+            color: #11141C;
+        }
+        .vn-teamCode h3 {
+            margin: 0;
+            font-size: 12px;
+            color: #888;
+        }
+
+        /* Scores */
+        .vn-shedTeam p {
+            font-size: 22px;
+            font-weight: 700;
+            color: #0E1639; /* Score color */
+            margin: 5px 0 0 0;
+        }
+        /* Hidden since full score is used in the <p> tag */
+        .ov-display { 
+            display: none;
+        } 
+
+        /* VS Separator */
+        .versus {
+            font-size: 18px;
+            font-weight: 700;
+            color: #ccc;
+            padding: 0 15px;
+        }
+        .versus::before {
+            content: "VS";
+        }
+
+        /* Action Buttons */
+        .vn-ticket {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            width: 250px;
+        }
+        .vn-ticnbtn {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .vn-matchBtn {
+            background-color: #ff6600; /* Orange primary button */
+            color: white;
+            padding: 8px 15px;
+            border-radius: 20px;
+            text-decoration: none;
+            font-size: 12px;
+            font-weight: 600;
+            transition: background-color 0.2s;
+        }
+        .vn-matchBtn:hover {
+            background-color: #e55c00;
+            color: white;
+        }
+
+        /* Icon Links (Match Reports/Highlights) */
+        .matchReportIcon, .matchHLIcon {
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            background-color: #E5E7E9;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background-color 0.2s;
+            text-decoration: none;
+            color: #11141C; /* Base icon color */
+        }
+        .matchReportIcon:hover, .matchHLIcon:hover {
+            background-color: #0E1639;
+            color: white; /* Icon color on hover */
+        }
+
+        /* Utility classes from original HTML structure */
+        .fl { float: left; }
+        .w20 { width: 20%; }
+        .w50 { width: 50%; }
+        .pr50 { padding-right: 50px; }
+        .posRel { position: relative; }
+
+        /* Floating Button and Footer styles are retained */
+        .floating-button {
+            position: fixed;
+            top: 100px;
+            right: 25px;
+            z-index: 999;
+        }
+        .floating-button a {
+            background-color: #28a745;
+            color: white;
+            padding: 12px 20px;
+            border-radius: 30px;
+            text-decoration: none;
+            font-weight: bold;
+        }
+        footer {
+            padding: 20px 0;
+            margin-top: 50px;
+        }
+    </style>
+</head>
+<body>
+
+<nav class="navbar">
+    <div class="container-fluid">
+        <a class="navbar-brand" href="#">
+            <img src="https://documents.iplt20.com/ipl/assets/images/ipl-logo-new-old.png" style="height: 50px;" alt="IPL Logo">
+            IPL Management
+        </a>
+        <a href="main.jsp" class="btn btn-admin">Logout</a>
+    </div>
+</nav>
+
+<div class="dock-container">
+    <div class="dock-item"><a href="admindash.jsp"><i class="fas fa-users"></i> Teams</a></div>
+    <div class="dock-item"><a href="adminPlayers.jsp"><i class="fas fa-user"></i> Players</a></div>
+    <div class="dock-item"><a href="#" class="active"><i class="fas fa-calendar-alt"></i> Matches</a></div>
+</div>
+
+<div class="section-title">Match Archive</div>
+
+<div class="filter-bar">
+    <button class="active" onclick="filterMatches('All', this)">All</button>
+    <button onclick="filterMatches('Upcoming', this)">Upcoming</button>
+    <button onclick="filterMatches('Completed', this)">Completed</button>
+    <button onclick="filterMatches('Running', this)">Running</button>
+</div>
+
+<div class="container mt-4">
+    
+    <div class="vn-sheduleList vn-resultsList posRel vn-fullArchiveList col-100 floatLft menT mb-4">
+        <span class="timeLineDivider"></span>
+        <ul id="team_archive">
+            <%
+                // Scriptlet logic to fetch data
+                MatchDaoImp matchDao = new MatchDaoImp();
+                TeamDaoImp teamDao = new TeamDaoImp();
+                List<Match> matches = matchDao.getAllMatches(); // Assuming this returns all matches
+
+                // Iterating over the list of matches
+                for (Match m : matches) {
+                    Team team1 = teamDao.getTeamByCode(m.getTeam1Code());
+                    Team team2 = teamDao.getTeamByCode(m.getTeam2Code());
+
+                    String team1Logo = team1 != null ? team1.getLogoPath() : "default-logo.png";
+                    String team2Logo = team2 != null ? team2.getLogoPath() : "default-logo.png";
+
+                    String team1Name = team1 != null ? team1.getTeamName() : "Unknown";
+                    String team2Name = team2 != null ? team2.getTeamName() : "Unknown";
+
+                    String team1Score = m.getTeam1Score() != null ? m.getTeam1Score() : "- / -";
+                    String team2Score = m.getTeam2Score() != null ? m.getTeam2Score() : "- / -";
+                    
+                    // Logic to infer match stage (Needs proper property in MatchBean for production)
+                    String matchStage = "League Match";
+                    if (m.getVenue() != null && m.getVenue().toLowerCase().contains("stadium, ahmedabad") && m.getStatus().equalsIgnoreCase("completed")) {
+                        if (m.getMatchDate() != null && m.getMatchDate().contains("JUN, TUE 3")) {
+                            matchStage = "Final";
+                        } else if (m.getMatchDate() != null && m.getMatchDate().contains("JUN, SUN 1")) {
+                            matchStage = "Qualifier 2";
+                        }
+                    } else if (m.getVenue() != null && m.getVenue().toLowerCase().contains("chandigarh") && m.getStatus().equalsIgnoreCase("completed")) {
+                        matchStage = "Eliminator";
+                    }
+                    
+                    String resultComment = "";
+                    if (m.getStatus().equalsIgnoreCase("completed") && m.getWinnerCode() != null) {
+                        // **NOTE:** You need to calculate the actual winning margin (e.g., "Won by 6 Runs") in your Servlet/DAO. 
+                        // For display purposes, we use a placeholder:
+                        resultComment = m.getWinnerCode() + " Won the Match"; 
+                    } else if (m.getStatus().equalsIgnoreCase("upcoming")) {
+                        resultComment = "Match Scheduled";
+                    } else if (m.getStatus().equalsIgnoreCase("running")) {
+                        resultComment = "Live Score In Progress";
+                    }
+            %>
+            <li data-status="<%= m.getStatus() %>">
+                <div class="vn-schedule-head">
+                    <div class="w20 fl pr50 posRel">
+                        <span class="vn-matchOrder"><%= matchStage %></span>
+                        <span class="timeline-dot"></span>
+                    </div>
+                    <div class="w50 fl">
+                        <span class="vn-venueDet">
+                            <p>
+                                <span><%= m.getVenue() %></span>
+                            </p>
+                        </span>
+                        <div class="vn-matchDateTime">
+                            <%= m.getMatchDate() %>, <%= m.getMatchTime() %> IST
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="vn-shedule-desk col-100 floatLft">
+                    
+                    <div class="w20 tl pr50">
+                        <% if (!resultComment.isEmpty()) { %>
+                            <div class="vn-ticketTitle">
+                                <%= resultComment %>
+                            </div>
+                        <% } %>
+                    </div>
+                    
+                    <div class="vn-sheduleLogo">
+                        <div class="live-score">
+                            
+                            <div class="vn-shedTeam">
+                                <img src="<%= team1Logo %>" alt="<%= team1Name %>" class="schTeamLogo">
+                                <div class="vn-teamTitle">
+                                    <div class="vn-teamName">
+                                        <h3><%= team1Name %></h3>
+                                    </div>
+                                    <div class="vn-teamCode">
+                                        <h3><%= m.getTeam1Code() %></h3>
+                                    </div>
+                                    <p><%= team1Score %></p>
+                                </div>
+                            </div>
+                            
+                            <span class="versus"></span>
+                            
+                            <div class="vn-shedTeam vn-team-2">
+                                <img src="<%= team2Logo %>" alt="<%= team2Name %>" class="schTeamLogo">
+                                <div class="vn-teamTitle">
+                                    <div class="vn-teamName">
+                                        <h3><%= team2Name %></h3>
+                                    </div>
+                                    <div class="vn-teamCode">
+                                        <h3><%= m.getTeam2Code() %></h3>
+                                    </div>
+                                    <p><%= team2Score %></p>
+                                </div>
+                            </div>
+                            
+                        </div>
+                    </div>
+                    
+                    <div class="vn-ticket">
+                        <div class="vn-ticnbtn">
+                            
+                            <a href="updateMatch.jsp?matchId=<%= m.getMatchId() %>" class="matchReportIcon" title="Edit Match">
+                                <i class="fas fa-edit"></i>
+                            </a>
+                            <a onclick="confirmDelete(<%= m.getMatchId() %>)" class="matchHLIcon" title="Delete Match">
+                                <i class="fas fa-trash"></i>
+                            </a>
+                            
+                            <a href="MatchServlet?action=getMatchById&matchId=<%= m.getMatchId() %>" class="vn-matchBtn">Match Centre</a>
+                        </div>
+                    </div>
+                    
+                </div>
+            </li>
+            <% } %>
+        </ul>
+    </div>
+
+</div>
+
+<div class="floating-button">
+    <a href="addMatch.jsp"><i class="fas fa-plus-circle"></i> Add Match</a>
+</div>
+
+<footer class="text-center mt-5">© 2025 IPL Management. All Rights Reserved.</footer>
+
+<script>
+    function confirmDelete(id) {
+        if (confirm("Are you sure you want to delete this match?")) {
+            window.location.href = "MatchServlet?action=delete&matchId=" + id;
+        }
+    }
+
+    /**
+     * Client-side filtering function for match list items.
+     * @param {string} filter - The status to filter by ('All', 'Upcoming', 'Completed', 'Running').
+     * @param {HTMLElement} button - The button element that was clicked.
+     */
+    function filterMatches(filter, button) {
+        // 1. Update active state of filter buttons
+        const buttons = document.querySelectorAll('.filter-bar button');
+        buttons.forEach(btn => btn.classList.remove('active'));
+        button.classList.add('active');
+
+        // 2. Iterate through all match list items (li) and show/hide based on filter
+        const matchItems = document.querySelectorAll('#team_archive li');
+        matchItems.forEach(item => {
+            const matchStatus = item.getAttribute('data-status');
+            
+            if (filter === 'All' || matchStatus.toUpperCase() === filter.toUpperCase()) {
+                item.style.display = 'flex'; // Show the match (using flex to align the content properly)
+            } else {
+                item.style.display = 'none'; // Hide the match
+            }
+        });
+    }
+</script>
+
+</body>
+</html>
